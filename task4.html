@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Tracker - Chrome Extension Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .extension-demo {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .extension-popup {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 350px;
+            height: fit-content;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .current-site {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .site-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .site-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .site-category {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .productive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .unproductive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .neutral {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .time-spent {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .dashboard {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard h2 {
+            color: #333;
+            font-size: 1.8rem;
+        }
+
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-btn {
+            padding: 8px 16px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .date-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9ff, #ffffff);
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-time { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .icon-productive { background: linear-gradient(45deg, #28a745, #20c997); color: white; }
+        .icon-distracted { background: linear-gradient(45deg, #dc3545, #fd7e14); color: white; }
+        .icon-focus { background: linear-gradient(45deg, #ffc107, #fd7e14); color: white; }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart {
+            height: 200px;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            gap: 8px;
+        }
+
+        .bar {
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            min-width: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .bar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .top-sites {
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .site-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .site-item:last-child {
+            border-bottom: none;
+        }
+
+        .site-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .site-favicon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .site-time {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .productivity-score {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .score-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .animated {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .extension-files {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .file-section {
+            margin-bottom: 30px;
+        }
+
+        .file-header {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            color: #333;
+            border-left: 4px solid #667eea;
+        }
+
+        .file-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header animated">
+            <h1>🕒 Productivity Tracker</h1>
+            <p>Chrome Extension for Time Tracking & Analytics</p>
+        </div>
+
+        <div class="extension-demo animated">
+            <div class="extension-popup">
+                <div class="popup-header">
+                    <div class="logo">PT</div>
+                    <div>
+                        <h3>Productivity Tracker</h3>
+                        <small>Active Session</small>
+                    </div>
+                </div>
+
+                <div class="current-site">
+                    <div class="site-info">
+                        <span class="site-name">github.com</span>
+                        <span class="site-category productive">Productive</span>
+                    </div>
+                    <div class="time-spent">42m 15s</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 70%"></div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">4h 23m</div>
+                        <div class="stat-label">Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">73%</div>
+                        <div class="stat-label">Productive</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="btn btn-primary">Dashboard</button>
+                    <button class="btn btn-secondary">Settings</button>
+                </div>
+            </div>
+
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h2>Weekly Analytics</h2>
+                    <div class="date-selector">
+                        <button class="date-btn">Today</button>
+                        <button class="date-btn active">Week</button>
+                        <button class="date-btn">Month</button>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon icon-time">🕒</div>
+                        <div class="metric-value">31h 45m</div>
+                        <div class="metric-label">Total Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon icon-productive">📈</div>
+                        <div class="metric-value">23h 12m</div>
+                        <div class="metric-label">Productive</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon icon-distracted">📱</div>
+                        <div class="metric-value">8h 33m</div>
+                        <div class="metric-label">Distracted</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon icon-focus">🎯</div>
+                        <div class="metric-value">2.3h</div>
+                        <div class="metric-label">Avg Focus</div>
+                    </div>
+                </div>
+
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <div class="chart-title">Daily Activity</div>
+                        <div class="chart">
+                            <div class="bar" style="height: 60%">
+                                <div class="bar-label">Mon</div>
+                            </div>
+                            <div class="bar" style="height: 80%">
+                                <div class="bar-label">Tue</div>
+                            </div>
+                            <div class="bar" style="height: 45%">
+                                <div class="bar-label">Wed</div>
+                            </div>
+                            <div class="bar" style="height: 90%">
+                                <div class="bar-label">Thu</div>
+                            </div>
+                            <div class="bar" style="height: 75%">
+                                <div class="bar-label">Fri</div>
+                            </div>
+                            <div class="bar" style="height: 30%">
+                                <div class="bar-label">Sat</div>
+                            </div>
+                            <div class="bar" style="height: 25%">
+                                <div class="bar-label">Sun</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="top-sites">
+                        <div class="chart-title">Top Websites</div>
+                        <div class="site-item">
+                            <div class="site-details">
+                                <div class="site-favicon">GH</div>
+                                <div>
+                                    <div class="site-name">github.com</div>
+                                    <div class="site-category productive">Productive</div>
+                                </div>
+                            </div>
+                            <div class="site-time">8h 45m</div>
+                        </div>
+                        <div class="site-item">
+                            <div class="site-details">
+                                <div class="site-favicon">SO</div>
+                                <div>
+                                    <div class="site-name">stackoverflow.com</div>
+                                    <div class="site-category productive">Productive</div>
+                                </div>
+                            </div>
+                            <div class="site-time">5h 23m</div>
+                        </div>
+                        <div class="site-item">
+                            <div class="site-details">
+                                <div class="site-favicon">YT</div>
+                                <div>
+                                    <div class="site-name">youtube.com</div>
+                                    <div class="site-category unproductive">Unproductive</div>
+                                </div>
+                            </div>
+                            <div class="site-time">3h 12m</div>
+                        </div>
+                        <div class="site-item">
+                            <div class="site-details">
+                                <div class="site-favicon">TW</div>
+                                <div>
+                                    <div class="site-name">twitter.com</div>
+                                    <div class="site-category unproductive">Unproductive</div>
+                                </div>
+                            </div>
+                            <div class="site-time">2h 45m</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="productivity-score">
+                    <h3>Weekly Productivity Score</h3>
+                    <div class="score-circle">
+                        <div class="score-value">73</div>
+                    </div>
+                    <p>Great work! You're staying focused and productive.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="extension-files animated">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Complete Extension Files</h2>
+            
+            <div class="file-section">
+                <div class="file-header">manifest.json</div>
+                <div class="file-content">{
+  "manifest_version": 3,
+  "name": "Productivity Tracker",
+  "version": "1.0.0",
+  "description": "Track time spent on websites and analyze productivity",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Productivity Tracker"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}</div>
+            </div>
+
+            <div class="file-section">
+                <div class="file-header">background.js</div>
+                <div class="file-content">// Background service worker for Productivity Tracker
+class ProductivityTracker {
+  constructor() {
+    this.currentTab = null;
+    this.startTime = null;
+    this.isTracking = false;
+    this.apiUrl = 'http://localhost:3000/api';
+    
+    this.initializeTracking();
+  }
+
+  initializeTracking() {
+    // Listen for tab changes
+    chrome.tabs.onActivated.addListener((activeInfo) => {
+      this.handleTabChange(activeInfo.tabId);
+    });
+
+    // Listen for tab updates (URL changes)
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo.status === 'complete' && tab.active) {
+        this.handleTabChange(tabId);
+      }
+    });
+
+    // Listen for window focus changes
+    chrome.windows.onFocusChanged.addListener((windowId) => {
+      if (windowId === chrome.windows.WINDOW_ID_NONE) {
+        this.stopTracking();
+      } else {
+        chrome.tabs.query({active: true, windowId: windowId}, (tabs) => {
+          if (tabs[0]) this.handleTabChange(tabs[0].id);
+        });
+      }
+    });
+  }
+
+  async handleTabChange(tabId) {
+    try {
+      const tab = await chrome.tabs.get(tabId);
+      
+      // Stop tracking previous tab
+      if (this.isTracking) {
+        await this.stopTracking();
+      }
+      
+      // Start tracking new tab
+      if (tab.url && !tab.url.startsWith('chrome://')) {
+        await this.startTracking(tab);
+      }
+    } catch (error) {
+      console.error('Error handling tab change:', error);
+    }
+  }
+
+  async startTracking(tab) {
+    this.currentTab = {
+      id: tab.id,
+      url: tab.url,
+      title: tab.title,
+      domain: new URL(tab.url).hostname
+    };
+    
+    this.startTime = Date.now();
+    this.isTracking = true;
+    
+    console.log('Started tracking:', this.currentTab.domain);
+  }
+
+  async stopTracking() {
+    if (!this.isTracking || !this.currentTab || !this.startTime) {
+      return;
+    }
+
+    const endTime = Date.now();
+    const timeSpent = endTime - this.startTime;
+    
+    // Only track if spent more than 5 seconds
+    if (timeSpent > 5000) {
+      await this.recordTimeSpent({
+        domain: this.currentTab.domain,
+        url: this.currentTab.url,
+        title: this.currentTab.title,
+        timeSpent: timeSpent,
+        startTime: this.startTime,
+        endTime: endTime
+      });
+    }
+
+    this.isTracking = false;
+    this.currentTab = null;
+    this.startTime = null;
+  }
+
+  async recordTimeSpent(data) {
+    try {
+      // Store locally first
+      await this.storeLocally(data);
+      
+      // Try to sync with backend
+      await this.syncWithBackend(data);
+    } catch (error) {
+      console.error('Error recording time:', error);
+    }
+  }
+
+  async storeLocally(data) {
+    const key = `session_${Date.now()}`;
+    const sessionData = {
+      ...data,
+      category: this.categorizeWebsite(data.domain),
+      timestamp: new Date().toISOString()
+    };
+    
+    const result = await chrome.storage.local.get(['sessions']);
+    const sessions = result.sessions || [];
+    sessions.push(sessionData);
+    
+    await chrome.storage.local.set({ sessions });
+  }
+
+  async syncWithBackend(data) {
+    try {
+      const response = await fetch(`${this.apiUrl}/track`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          category: this.categorizeWebsite(data.domain),
+          userId: await this.getUserId()
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to sync with backend');
+      }
+    } catch (error) {
+      console.error('Backend sync failed:', error);
+    }
+  }
+
+  categorizeWebsite(domain) {
+    const productiveSites = [
+      'github.com', 'stackoverflow.com', 'developer.mozilla.org',
+      'docs.google.com', 'notion.so', 'trello.com', 'slack.com',
+      'codepen.io', 'codesandbox.io', 'repl.it', 'leetcode.com',
+      'coursera.org', 'udemy.com', 'khanacademy.org'
+    ];
+    
+    const unproductiveSites = [
+      'facebook.com', 'twitter.com', 'instagram.com', 'tiktok.com',
+      'youtube.com', 'netflix.com', 'twitch.tv', 'reddit.com',
+      'buzzfeed.com', '9gag.com', 'imgur.com'
+    ];
+    
+    if (productiveSites.some(site => domain.includes(site))) {
+      return 'productive';
+    } else if (unproductiveSites.some(site => domain.includes(site))) {
+      return 'unproductive';
+    } else {
+      return 'neutral';
+    }
+  }
+
+  async getUserId() {
+    const result = await chrome.storage.local.get(['userId']);
+    if (!result.userId) {
+      const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+      await chrome.storage.local.set({ userId });
+      return userId;
+    }
+    return result.userId;
+  }
+}
+
+// Initialize the tracker
+new ProductivityTracker();</div>
+            </div>
+
+            <div class="file-section">
+                <div class="file-header">popup.html</div>
+                <div class="file-content"><!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border-radius: 8px;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    .current-site {
+      background: #f8f9ff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .site-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .site-category {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .productive { background: #d4edda; color: #155724; }
+    .unproductive { background: #f8d7da; color: #721c24; }
+    .neutral { background: #fff3cd; color: #856404; }
+    .time-spent {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      border: 2px solid #f0f0f0;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #333;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 10px;
+      background: #667eea;
+      color: white;
+    }
+    .btn:hover { background: #5a67d8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">PT</div>
+    <div>
+      <h3>Productivity Tracker</h3>
+      <small id="status">Loading...</small>
+    </div>
+  </div>
+
+  <div class="current-site">
+    <div class="site-info">
+      <span id="currentSite">Loading...</span>
+      <span id="siteCategory" class="site-category neutral">Neutral</span>
+    </div>
+    <div id="currentTime" class="time-spent">0m 0s</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div id="todayTotal" class="stat-value">0h 0m</div>
+      <div class="stat-label">Today</div>
+    </div>
+    <div class="stat-card">
+      <div id="productivityScore" class="stat-value">0%</div>
+      <div class="stat-label">Productive</div>
+    </div>
+  </div>
+
+  <button class="btn" id="dashboardBtn">Open Dashboard</button>
+  <button class="btn" style="background: #6c757d;" id="settingsBtn">
